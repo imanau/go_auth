@@ -1,0 +1,16 @@
+NAME=go_auth
+VERSION=1.0
+
+MAKEFILE_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+
+build:
+	docker build -t $(NAME) .
+
+bash:
+	docker run -it -v $(MAKEFILE_DIR):/usr/src/go_auth -p 3000:3000  $(NAME)
+
+run:
+	docker run -it -v $(MAKEFILE_DIR):/usr/src/go_auth -p 3000:3000  $(NAME) bash -c 'go run main.go'
+
+drop:x
+	docker image 
