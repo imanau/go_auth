@@ -1,0 +1,21 @@
+version: "3"
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: auth_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+  go:
+    build: ./docker/go
+    command: go run main.go
+    volumes:
+      - ./go:/usr/src/go_auth
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
