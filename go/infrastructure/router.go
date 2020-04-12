@@ -1,7 +1,7 @@
 package infrastructure
 
 import (
-	"net/http"
+	"go_auth/interfaces/controllers"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -16,12 +16,6 @@ func Init() {
 	e.Use(middleware.Recover())
 
 	// router
-	e.GET("/", mainPage())
+	e.GET("/", controllers.Index())
 	e.Start(":3000") //ポート番号指定してね
-}
-
-func mainPage() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "Hello World")
-	}
 }

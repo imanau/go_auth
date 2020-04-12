@@ -1,8 +1,17 @@
+package domain
+
+import (
+	"github.com/jinzhu/gorm"
+)
+
+// Users slice of User
+type Users []User
+
 // User User is model of users
 type User struct {
 	gorm.Model
-	Name      string `gorm:"type:varchar(255);not null;"`
-	UID       string `gorm:"type:varchar(255);not null;unique"`
-	Pasword   string `gorm:"size:255;not null"`
-	Role      int    `gorm:"not null"`
+	Name    string `gorm:"type:varchar(255);not null;"`
+	UID     string `gorm:"type:varchar(255);not null;unique"`
+	Pasword string `gorm:"size:255;not null"`
+	Role    int    `gorm:"not null"`
 }
