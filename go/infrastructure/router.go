@@ -16,6 +16,6 @@ func Init() {
 	e.Use(middleware.Recover())
 
 	// router
-	e.GET("/", controllers.Index())
+	e.GET("/", controllers.Index)
 	e.Start(":3000") //ポート番号指定してね
 }
