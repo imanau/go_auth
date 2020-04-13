@@ -12,5 +12,5 @@ bash:
 run:
 	docker run -it -v $(MAKEFILE_DIR):/usr/src/go_auth -p 3000:3000  $(NAME) bash -c 'go run main.go'
 
-drop:x
-	docker image 
+test:
+	docker-compose exec go /bin/bash -c 'go test -v ./...'

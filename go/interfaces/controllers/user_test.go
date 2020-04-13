@@ -5,18 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	// "go_auth/domain"
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 )
-
-// var (
-//    testMockDB = domain.Users{
-//        "ID": 1,
-//        "Email": "test@example.com",
-//        "Password": "testest"
-//    }
-// )
 
 func TestIndex(t *testing.T) {
 	e := echo.New()
