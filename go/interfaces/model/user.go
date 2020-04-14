@@ -4,7 +4,7 @@ import (
 	"go_auth/domain"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/postgres" // porstgres driver
 )
 
 var db *gorm.DB
