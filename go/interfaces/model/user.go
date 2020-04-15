@@ -9,17 +9,19 @@ import (
 
 var db *gorm.DB
 
-func init() {
+// ConnectDB return *gorm.DB
+func ConnectDB() (*gorm.DB, error) {
 	var err error
 	db, err = gorm.Open("postgres", "host=db port=5432 user=postgres dbname=auth_service password=postgres sslmode=disable")
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&domain.User{})
+	return db, err
 }
 
 // AllUser return all of users
-func AllUser() *gorm.DB {
+func AllUser(db *gorm.DB) *gorm.DB {
 	users := new(domain.Users)
 	result := db.Find(&users)
 	return result

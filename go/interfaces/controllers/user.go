@@ -9,7 +9,11 @@ import (
 
 // Index indexActionHandler
 func Index(c echo.Context) error {
-	rows := model.AllUser()
+	db, err := model.ConnectDB()
+	if err != nil {
+		SQLError(c, err)
+	}
+	rows := model.AllUser(db)
 	if rows.Error != nil {
 		SQLError(c, rows.Error)
 	}
