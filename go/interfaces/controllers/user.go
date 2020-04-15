@@ -10,6 +10,7 @@ import (
 // Index indexActionHandler
 func Index(c echo.Context) error {
 	db, err := model.ConnectDB()
+	defer db.Close()
 	if err != nil {
 		SQLError(c, err)
 	}
