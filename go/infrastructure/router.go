@@ -18,5 +18,6 @@ func Init() {
 	// router
 	e.GET("/", controllers.Index)
 	e.POST("/sign_up", controllers.Signup)
+	e.POST("/login", controllers.Login)
 	e.Start(":3000")
 }

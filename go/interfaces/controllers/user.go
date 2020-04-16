@@ -4,9 +4,26 @@ import (
 	"go_auth/domain"
 	"go_auth/interfaces/model"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
+
+type jwtCustomClaims struct {
+	UID  uint   `json:"uid"`
+	Name string `json:"name"`
+	jwt.StandardClaims
+}
+
+var signingKey = []byte("secretkeysample")
+
+// Config jwtconfig
+var Config = middleware.JWTConfig{
+	Claims:     &jwtCustomClaims{},
+	SigningKey: signingKey,
+}
 
 // Index indexActionHandler
 func Index(c echo.Context) error {
@@ -51,4 +68,48 @@ func Signup(c echo.Context) error {
 	model.CreateUser(db, user)
 	user.Password = ""
 	return c.JSON(http.StatusCreated, user)
+}
+
+// Login Handler return jwt
+func Login(c echo.Context) error {
+	u := new(domain.User)
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+	// db connect
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	user := model.FindUser(db, u)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "invalid uid or password",
+		}
+	}
+	claims := &jwtCustomClaims{
+		user.ID,
+		user.Name,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString(signingKey)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"token": t,
+	})
+}
+
+// jwt decode uid
+func userIDFromToken(c echo.Context) uint {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*jwtCustomClaims)
+	uid := claims.UID
+	return uid
 }
