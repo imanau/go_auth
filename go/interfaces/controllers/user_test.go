@@ -35,3 +35,18 @@ func TestSignupOk(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 	}
 }
+
+// Loginの正常系
+func TestLoginOk(t *testing.T) {
+	// param pattern
+	okJSON := `{"uid":"test@exmaple.com","password": "password"}`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(okJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/login")
+	if assert.NoError(t, Login(c)) {
+		assert.Equal(t, http.StatusCreated, rec.Code)
+	}
+}
