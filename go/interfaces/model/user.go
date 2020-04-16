@@ -26,3 +26,14 @@ func AllUser(db *gorm.DB) *gorm.DB {
 	result := db.Find(&users)
 	return result
 }
+
+// FindUser return User
+func FindUser(db *gorm.DB, user *domain.User) domain.User {
+	db.Where("uid = ?", user.UID).First(&user)
+	return *user
+}
+
+// CreateUser model Create
+func CreateUser(db *gorm.DB, user *domain.User) {
+	db.Create(user)
+}

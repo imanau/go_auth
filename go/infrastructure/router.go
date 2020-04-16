@@ -17,5 +17,6 @@ func Init() {
 
 	// router
 	e.GET("/", controllers.Index)
-	e.Start(":3000") //ポート番号指定してね
+	e.POST("/sign_up", controllers.Signup)
+	e.Start(":3000")
 }
