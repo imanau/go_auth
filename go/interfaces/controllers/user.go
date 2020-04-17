@@ -36,7 +36,7 @@ func Index(c echo.Context) error {
 	if rows.Error != nil {
 		SQLError(c, rows.Error)
 	}
-	return c.JSON(http.StatusOK, rows)
+	return c.JSON(http.StatusOK, rows.Value)
 }
 
 // Signup Handler

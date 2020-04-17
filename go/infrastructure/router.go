@@ -16,8 +16,9 @@ func Init() {
 	e.Use(middleware.Recover())
 
 	// router
-	e.GET("/", controllers.Index)
 	e.POST("/sign_up", controllers.Signup)
 	e.POST("/login", controllers.Login)
+	api := e.Group("/api")
+	api.GET("/users", controllers.Index)
 	e.Start(":3000")
 }
