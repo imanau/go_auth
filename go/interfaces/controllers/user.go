@@ -9,6 +9,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type jwtCustomClaims struct {
@@ -64,7 +65,15 @@ func Signup(c echo.Context) error {
 			Message: "uid already exists",
 		}
 	}
-
+	// パスワード暗号化処理
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "internal server error",
+		}
+	}
+	user.Password = string(hash)
 	model.CreateUser(db, user)
 	user.Password = ""
 	return c.JSON(http.StatusCreated, user)
