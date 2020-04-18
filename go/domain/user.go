@@ -18,3 +18,10 @@ type User struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
 }
+
+// UserForGeneral api返却用のユーザー情報を格納する
+type UserForGeneral struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+	UID  string `json:"uid"`
+}
