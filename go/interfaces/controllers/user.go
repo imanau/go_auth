@@ -13,7 +13,8 @@ import (
 )
 
 type jwtCustomClaims struct {
-	UID  uint   `json:"uid"`
+	ID   uint   `json:"id"`
+	UID  string `json:"uid"`
 	Name string `json:"name"`
 	jwt.StandardClaims
 }
@@ -110,6 +111,7 @@ func Login(c echo.Context) error {
 	claims := &jwtCustomClaims{
 		u.ID,
 		u.UID,
+		u.Name,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
 		},
@@ -124,10 +126,13 @@ func Login(c echo.Context) error {
 	})
 }
 
-// jwt decode uid
-func userIDFromToken(c echo.Context) uint {
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*jwtCustomClaims)
+// UserIDFromToken jwt tokenでユーザーを認証し、そのユーザー情報を返却する
+func UserIDFromToken(c echo.Context) error {
+	u := c.Get("user").(*jwt.Token)
+	claims := u.Claims.(*jwtCustomClaims)
+	id := claims.ID
 	uid := claims.UID
-	return uid
+	name := claims.Name
+	user := domain.UserForGeneral{ID: id, UID: uid, Name: name}
+	return c.JSON(http.StatusOK, user)
 }
