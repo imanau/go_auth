@@ -24,7 +24,7 @@ func TestIndex(t *testing.T) {
 // SignUpの正常系
 func TestSignupOk(t *testing.T) {
 	// param pattern
-	okJSON := `{"name":"ok","uid":"test1@example.com","password": "testpassdreafae","role": 1}`
+	okJSON := `{"name":"ok","uid":"test6@example.com","password": "testpassdreafae","role": 1}`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/sign_up", strings.NewReader(okJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -39,7 +39,7 @@ func TestSignupOk(t *testing.T) {
 // Loginの正常系
 func TestLoginOk(t *testing.T) {
 	// param pattern
-	okJSON := `{"uid":"test@exmaple.com","password": "password"}`
+	okJSON := `{"uid":"test2@example.com","password": "password"}`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(okJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -47,6 +47,6 @@ func TestLoginOk(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetPath("/login")
 	if assert.NoError(t, Login(c)) {
-		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }

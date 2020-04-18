@@ -66,7 +66,7 @@ func Signup(c echo.Context) error {
 		}
 	}
 	// パスワード暗号化処理
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return &echo.HTTPError{
 			Code:    http.StatusInternalServerError,
@@ -85,22 +85,31 @@ func Login(c echo.Context) error {
 	if err := c.Bind(u); err != nil {
 		return err
 	}
+	inputPass := u.Password
 	// db connect
 	db, err := model.ConnectDB()
 	defer db.Close()
 	if err != nil {
 		SQLError(c, err)
 	}
-	user := model.FindUser(db, u)
-	if user.ID == 0 {
+	model.FindUser(db, u)
+	if u.ID == 0 {
 		return &echo.HTTPError{
 			Code:    http.StatusConflict,
-			Message: "invalid uid or password",
+			Message: "emailが正しくありません",
+		}
+	}
+	// ハッシュ化したパスワードの比較
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(inputPass))
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "パスワードが正しくありません",
 		}
 	}
 	claims := &jwtCustomClaims{
-		user.ID,
-		user.Name,
+		u.ID,
+		u.UID,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
 		},
