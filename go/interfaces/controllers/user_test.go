@@ -24,7 +24,7 @@ func TestIndex(t *testing.T) {
 // SignUpの正常系
 func TestSignupOk(t *testing.T) {
 	// param pattern
-	okJSON := `{"name":"ok","uid":"test6@example.com","password": "testpassdreafae","role": 1}`
+	okJSON := `{"name":"ok","uid":"test2@example.com","password": "password","role": 1}`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/sign_up", strings.NewReader(okJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

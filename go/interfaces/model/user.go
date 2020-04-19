@@ -1,18 +1,32 @@
 package model
 
 import (
+	"fmt"
 	"go_auth/domain"
+	"os"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // porstgres driver
+	"github.com/joho/godotenv"
 )
 
 var db *gorm.DB
 
 // ConnectDB return *gorm.DB
 func ConnectDB() (*gorm.DB, error) {
-	var err error
-	db, err = gorm.Open("postgres", "host=db port=5432 user=postgres dbname=auth_service password=postgres sslmode=disable")
+	// envファイル呼び込み
+	err := godotenv.Load(fmt.Sprintf("/usr/src/go_auth/envfiles/%s.env", os.Getenv("GO_ENV")))
+	if err != nil {
+		panic(err)
+	}
+	dbhost := os.Getenv("dbhost")
+	dbport := os.Getenv("dbport")
+	dbuser := os.Getenv("dbuser")
+	dbname := os.Getenv("dbname")
+	dbpassword := os.Getenv("dbpassword")
+	sslmode := os.Getenv("sslmode")
+	dbconfig := "host=" + dbhost + " port=" + dbport + " user=" + dbuser + " dbname=" + dbname + " password=" + dbpassword + " sslmode=" + sslmode
+	db, err = gorm.Open("postgres", dbconfig)
 	if err != nil {
 		panic("failed to connect database")
 	}
