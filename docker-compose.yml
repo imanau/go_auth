@@ -10,6 +10,16 @@ services:
       POSTGRES_DB: auth_service
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+  db_test:
+    image: postgres:12
+    volumes:
+      - ./db_test:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: auth_service_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
   go:
     build: ./docker/go
     command:
@@ -22,3 +32,4 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - db_test

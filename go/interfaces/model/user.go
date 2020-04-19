@@ -15,9 +15,9 @@ var db *gorm.DB
 // ConnectDB return *gorm.DB
 func ConnectDB() (*gorm.DB, error) {
 	// envファイル呼び込み
-	err := godotenv.Load(fmt.Sprintf("envfiles/%s.env", os.Getenv("GO_ENV")))
+	err := godotenv.Load(fmt.Sprintf("/usr/src/go_auth/envfiles/%s.env", os.Getenv("GO_ENV")))
 	if err != nil {
-		panic("Error loading .env file")
+		panic(err)
 	}
 	dbhost := os.Getenv("dbhost")
 	dbport := os.Getenv("dbport")
