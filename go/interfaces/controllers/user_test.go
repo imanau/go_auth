@@ -35,10 +35,9 @@ func TestSignupOk(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.SetPath("/sign_up")
-	// テスト前準備
+	// テスト前準備＆データ削除等後処理
 	user := new(domain.User)
 	json.Unmarshal([]byte(okJSON), &user)
-	// db接続＆後処理
 	db, err := model.ConnectDB()
 	if err != nil {
 		t.Error("db connection error")
@@ -59,13 +58,18 @@ func TestLoginOk(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	// db準備
+	c.SetPath("/login")
+	// テストデータ用意　＆　後始末
+	user := new(domain.User)
+	json.Unmarshal([]byte(okJSON), &user)
 	db, err := model.ConnectDB()
 	defer db.Close()
+	defer phisDelete(db, user)
+	user.Password = "$2a$10$Oowv3K1NeSMj78lKv9mHLuNu.QBoFHjtZv5UvEMtljBLyAImixx5q"
+	model.CreateUser(db, user)
 	if err != nil {
 		t.Error("db connection errro")
 	}
-	c.SetPath("/login")
 	if assert.NoError(t, Login(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
