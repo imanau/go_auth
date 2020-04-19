@@ -12,7 +12,10 @@ services:
       POSTGRES_PASSWORD: postgres
   go:
     build: ./docker/go
-    command: go run main.go
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "GO_ENV=develop go run main.go"
     volumes:
       - ./go:/usr/src/go_auth
     ports:
