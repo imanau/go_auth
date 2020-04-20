@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"go_auth/domain"
 	"go_auth/interfaces/model"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,9 +70,38 @@ func TestLoginOk(t *testing.T) {
 	user.Password = "$2a$10$Oowv3K1NeSMj78lKv9mHLuNu.QBoFHjtZv5UvEMtljBLyAImixx5q"
 	model.CreateUser(db, user)
 	if err != nil {
-		t.Error("db connection errro")
+		t.Error("db connection error")
 	}
 	if assert.NoError(t, Login(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
+// api/meの正常系テスト
+func TestMeOK(t *testing.T) {
+	// param pattern
+	okJSON := `{"uid":"test@example.com","password": "password","name":"test"}`
+	// token＆headerセット
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTEsInVpZCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoidGVzdCIsImV4cCI6MTU4NzY0MTYzMX0.AlVrjvtbsZ3xaqF_IEUWjJ1ECQ89N-OLSJVWqq7XK-Q"
+	e := echo.New()
+	req := httptest.NewRequest(echo.GET, "/api/me", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/me")
+	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
+	// テストデータ用意　＆　後始末
+	user := new(domain.User)
+	json.Unmarshal([]byte(okJSON), &user)
+	db, err := model.ConnectDB()
+	defer db.Close()
+	defer phisDelete(db, user)
+	model.CreateUser(db, user)
+	if err != nil {
+		t.Error("db create error")
+	}
+	if assert.NoError(t, exec) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }
