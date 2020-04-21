@@ -3,6 +3,7 @@ package controllers
 import (
 	"go_auth/domain"
 	"go_auth/interfaces/model"
+	"go_auth/utils"
 	"net/http"
 	"time"
 
@@ -47,8 +48,9 @@ func Signup(c echo.Context) error {
 	if err := c.Bind(user); err != nil {
 		return err
 	}
+	validateUser := utils.ValidateUser{Email: user.UID, Password: user.Password}
 	// validation
-	if user.UID == "" || user.Password == "" {
+	if !utils.UserValidation(validateUser) {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "invalid uid or password",
