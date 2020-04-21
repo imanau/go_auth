@@ -21,6 +21,7 @@ func Init() {
 	api := e.Group("/api")
 	api.Use(middleware.JWTWithConfig(controllers.Config))
 	api.GET("/users", controllers.Index)
+	api.POST("/users", controllers.Signup)
 	api.GET("/me", controllers.UserIDFromToken)
 	e.Start(":3000")
 }

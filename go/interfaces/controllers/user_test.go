@@ -99,13 +99,6 @@ func TestMeOK(t *testing.T) {
 	}
 }
 
-// api/users/createのテスト
-func TestCreateUser(t *testing.T) {
-	// okパラメーター
-	okJSON := `{"uid":"test@example.com","password": "password","name":"test"}`
-	fmt.Println(okJSON)
-}
-
 // テスト用レコード物理削除関数
 func phisDelete(db *gorm.DB, user *domain.User) {
 	if user.ID == 0 {
