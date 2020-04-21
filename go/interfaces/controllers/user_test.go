@@ -82,14 +82,7 @@ func TestMeOK(t *testing.T) {
 	// param pattern
 	okJSON := `{"uid":"test@example.com","password": "password","name":"test"}`
 	// token＆headerセット
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTEsInVpZCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoidGVzdCIsImV4cCI6MTU4NzY0MTYzMX0.AlVrjvtbsZ3xaqF_IEUWjJ1ECQ89N-OLSJVWqq7XK-Q"
-	e := echo.New()
-	req := httptest.NewRequest(echo.GET, "/api/me", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.SetPath("/api/me")
+	c, rec := jwtAuth("/api/me", okJSON)
 	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
 	// テストデータ用意　＆　後始末
 	user := new(domain.User)
@@ -106,10 +99,30 @@ func TestMeOK(t *testing.T) {
 	}
 }
 
+// api/users/createのテスト
+func TestCreateUser(t *testing.T) {
+	// okパラメーター
+	okJSON := `{"uid":"test@example.com","password": "password","name":"test"}`
+	fmt.Println(okJSON)
+}
+
 // テスト用レコード物理削除関数
 func phisDelete(db *gorm.DB, user *domain.User) {
 	if user.ID == 0 {
 		model.FindUser(db, user)
 	}
 	db.Unscoped().Delete(user)
+}
+
+// jwt認証共通部分
+func jwtAuth(path string, param string) (echo.Context, *httptest.ResponseRecorder) {
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTEsInVpZCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoidGVzdCIsImV4cCI6MTU4NzY0MTYzMX0.AlVrjvtbsZ3xaqF_IEUWjJ1ECQ89N-OLSJVWqq7XK-Q"
+	e := echo.New()
+	req := httptest.NewRequest(echo.GET, path, strings.NewReader(param))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath(path)
+	return c, rec
 }
