@@ -1,14 +1,20 @@
 package utils
 
 import (
-	"unicode/utf8"
+	"gopkg.in/go-playground/validator.v9"
 )
 
-// PasswordValidtion パスワードのバリデーション判定を行う
-func PasswordValidtion(password string) (result bool) {
-	// 現段階では文字数制限のみ
-	length := utf8.RuneCountInString(password)
-	if length < 8 {
+// ValidateUser struct of validation user
+type ValidateUser struct {
+	Email    string `validate:"required,email"` //必須パラメータ、かつ、emailフォーマット
+	Password string `validate:"required,min=8,max=255"`
+}
+
+// UserValidation パスワード及びemailアドレスのバリデーション
+func UserValidation(user ValidateUser) (result bool) {
+	validate := validator.New()
+	err := validate.Struct(user)
+	if err != nil {
 		result = false
 	} else {
 		result = true
