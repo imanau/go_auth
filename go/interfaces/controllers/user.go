@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"go_auth/domain"
 	"go_auth/interfaces/model"
 	"go_auth/utils"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -48,9 +50,11 @@ func Signup(c echo.Context) error {
 	if err := c.Bind(user); err != nil {
 		return err
 	}
-	validateUser := utils.ValidateUser{Email: user.UID, Password: user.Password}
+	validateUser := utils.UserValidation{}
+	validateUser.Email = user.UID
+	validateUser.Password = user.Password
 	// validation
-	if !utils.UserValidation(validateUser) {
+	if !utils.UserValidate(validateUser) {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "invalid uid or password",
@@ -126,6 +130,42 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})
+}
+
+// UpdateUser パスワード以外のユーザー情報の更新
+func UpdateUser(c echo.Context) error {
+	user := new(domain.User)
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	if err = c.Bind(user); err != nil {
+		return err
+	}
+	user.ID = uint(id)
+	// validation
+	validateUser := utils.EmailValidation{Email: user.UID}
+	if !utils.EmailValidate(validateUser) {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid uid",
+		}
+	}
+	// db connect
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー更新処理
+	user.Password = ""
+	fmt.Printf("%v+", user)
+	model.UpdateUser(db, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 // UserIDFromToken jwt tokenでユーザーを認証し、そのユーザー情報を返却する

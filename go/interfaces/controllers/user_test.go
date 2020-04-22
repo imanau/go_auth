@@ -120,7 +120,7 @@ func TestUpdateOK(t *testing.T) {
 	model.CreateUser(db, user)
 	// token＆headerセット
 	url := "/admin/users/" + strconv.Itoa(int(user.ID))
-	c, rec := jwtAuth(url, okJSON, "POST")
+	c, rec := jwtAuth(url, okJSON, "PATCH")
 	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
 	if assert.NoError(t, exec) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
@@ -145,6 +145,8 @@ func jwtAuth(path string, param string, method string) (echo.Context, *httptest.
 		req = httptest.NewRequest(echo.GET, path, strings.NewReader(param))
 	case "POST":
 		req = httptest.NewRequest(echo.POST, path, strings.NewReader(param))
+	case "PATCH":
+		req = httptest.NewRequest(echo.PATCH, path, strings.NewReader(param))
 	}
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))

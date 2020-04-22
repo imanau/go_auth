@@ -43,11 +43,20 @@ func AllUser(db *gorm.DB) *gorm.DB {
 
 // FindUser return User
 func FindUser(db *gorm.DB, user *domain.User) domain.User {
-	db.Where("uid = ?", user.UID).First(&user)
+	if user.ID == 0 {
+		db.Where("uid = ?", user.UID).First(&user)
+	} else {
+		db.Where("id = ?", user.ID).First(&user)
+	}
 	return *user
 }
 
 // CreateUser model Create
 func CreateUser(db *gorm.DB, user *domain.User) {
 	db.Create(user)
+}
+
+// UpdateUser model Update
+func UpdateUser(db *gorm.DB, user *domain.User) {
+	db.Model(&user).Updates(map[string]interface{}{"name": user.Name, "uid": user.UID, "role": user.Role})
 }

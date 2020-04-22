@@ -22,6 +22,7 @@ func Init() {
 	api.Use(middleware.JWTWithConfig(controllers.Config))
 	api.GET("/users", controllers.Index)
 	api.POST("/users", controllers.Signup)
+	api.PATCH("/users/:id", controllers.UpdateUser)
 	api.GET("/me", controllers.UserIDFromToken)
 	e.Start(":3000")
 }
