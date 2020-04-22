@@ -7,6 +7,7 @@ import (
 	"go_auth/interfaces/model"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -77,12 +78,12 @@ func TestLoginOk(t *testing.T) {
 	}
 }
 
-// api/meの正常系テスト
+// admin/meの正常系テスト
 func TestMeOK(t *testing.T) {
 	// param pattern
 	okJSON := `{"uid":"test@example.com","password": "password","name":"test"}`
 	// token＆headerセット
-	c, rec := jwtAuth("/api/me", okJSON)
+	c, rec := jwtAuth("/admin/me", okJSON, "GET")
 	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
 	// テストデータ用意　＆　後始末
 	user := new(domain.User)
@@ -99,6 +100,33 @@ func TestMeOK(t *testing.T) {
 	}
 }
 
+// UpdateUserの正常系
+func TestUpdateOK(t *testing.T) {
+	// param
+	okJSON := `{"uid":"test@example.com","name":"test2","role":2}`
+	// テストデータ用意　＆　後始末
+	user := new(domain.User)
+	json.Unmarshal([]byte(okJSON), &user)
+	user.UID = "test@example.com"
+	user.Name = "test"
+	user.Password = "password"
+	user.Role = 1
+	db, err := model.ConnectDB()
+	if err != nil {
+		t.Error("db connect error")
+	}
+	defer db.Close()
+	defer phisDelete(db, user)
+	model.CreateUser(db, user)
+	// token＆headerセット
+	url := "/admin/users/" + strconv.Itoa(int(user.ID))
+	c, rec := jwtAuth(url, okJSON, "PATCH")
+	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
+	if assert.NoError(t, exec) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
 // テスト用レコード物理削除関数
 func phisDelete(db *gorm.DB, user *domain.User) {
 	if user.ID == 0 {
@@ -108,10 +136,18 @@ func phisDelete(db *gorm.DB, user *domain.User) {
 }
 
 // jwt認証共通部分
-func jwtAuth(path string, param string) (echo.Context, *httptest.ResponseRecorder) {
+func jwtAuth(path string, param string, method string) (echo.Context, *httptest.ResponseRecorder) {
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTEsInVpZCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoidGVzdCIsImV4cCI6MTU4NzY0MTYzMX0.AlVrjvtbsZ3xaqF_IEUWjJ1ECQ89N-OLSJVWqq7XK-Q"
 	e := echo.New()
-	req := httptest.NewRequest(echo.GET, path, strings.NewReader(param))
+	var req *http.Request
+	switch method {
+	case "GET":
+		req = httptest.NewRequest(echo.GET, path, strings.NewReader(param))
+	case "POST":
+		req = httptest.NewRequest(echo.POST, path, strings.NewReader(param))
+	case "PATCH":
+		req = httptest.NewRequest(echo.PATCH, path, strings.NewReader(param))
+	}
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
 	rec := httptest.NewRecorder()

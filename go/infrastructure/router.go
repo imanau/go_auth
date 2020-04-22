@@ -18,10 +18,11 @@ func Init() {
 	// router
 	e.POST("/sign_up", controllers.Signup)
 	e.POST("/login", controllers.Login)
-	api := e.Group("/api")
+	api := e.Group("/admin")
 	api.Use(middleware.JWTWithConfig(controllers.Config))
 	api.GET("/users", controllers.Index)
 	api.POST("/users", controllers.Signup)
+	api.PATCH("/users/:id", controllers.UpdateUser)
 	api.GET("/me", controllers.UserIDFromToken)
 	e.Start(":3000")
 }
