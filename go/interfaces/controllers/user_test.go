@@ -123,7 +123,7 @@ func TestUpdateOK(t *testing.T) {
 	c, rec := jwtAuth(url, okJSON, "PATCH")
 	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
 	if assert.NoError(t, exec) {
-		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }
 
