@@ -128,7 +128,7 @@ func TestUpdateOK(t *testing.T) {
 }
 
 // changePassswordの正常系
-func TestchangePasswordOK(t *testing.T) {
+func TestChangePasswordOK(t *testing.T) {
 	// param
 	okJSON := `{"new_password":"password2", "password": "password","password_confirmation":"password"}`
 	// テストデータ用意　＆　後始末
@@ -146,7 +146,7 @@ func TestchangePasswordOK(t *testing.T) {
 	defer phisDelete(db, user)
 	model.CreateUser(db, user)
 	// token＆headerセット
-	url := "/admin/users/change_password" + strconv.Itoa(int(user.ID))
+	url := "/admin/users/change_password/" + strconv.Itoa(int(user.ID))
 	c, rec := jwtAuth(url, okJSON, "PATCH")
 	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
 	if assert.NoError(t, exec) {
