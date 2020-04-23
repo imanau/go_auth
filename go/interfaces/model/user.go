@@ -56,7 +56,12 @@ func CreateUser(db *gorm.DB, user *domain.User) {
 	db.Create(user)
 }
 
-// UpdateUser model Update
+// UpdateUser model Update withot password
 func UpdateUser(db *gorm.DB, user *domain.User) {
 	db.Model(&user).Updates(map[string]interface{}{"name": user.Name, "uid": user.UID, "role": user.Role})
+}
+
+// ChangePassword model Update with password
+func ChangePassword(db *gorm.DB, user *domain.User) {
+	db.Model(&user).Update("password", user.Password)
 }

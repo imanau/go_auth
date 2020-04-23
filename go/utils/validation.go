@@ -43,3 +43,15 @@ func EmailValidate(user EmailValidation) (result bool) {
 	}
 	return result
 }
+
+// PasswordValidate emailアドレスのバリデーション
+func PasswordValidate(user PasswordValidation) (result bool) {
+	validate := validator.New()
+	err := validate.Struct(user)
+	if err != nil {
+		result = false
+	} else {
+		result = true
+	}
+	return result
+}
