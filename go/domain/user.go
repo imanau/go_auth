@@ -25,3 +25,10 @@ type UserForGeneral struct {
 	Name string `json:"name"`
 	UID  string `json:"uid"`
 }
+
+// PasswordInfo パスワード更新用の情報を格納する
+type PasswordInfo struct {
+	Password             string `json:"password"`
+	PasswordConfirmation string `json:"password_confirmation"`
+	NewPassword          string `json:"new_password"`
+}

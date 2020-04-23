@@ -23,6 +23,7 @@ func Init() {
 	api.GET("/users", controllers.Index)
 	api.POST("/users", controllers.Signup)
 	api.PATCH("/users/:id", controllers.UpdateUser)
+	api.PATCH("/users/change_password/:id", controllers.ChangePassword)
 	api.GET("/me", controllers.UserIDFromToken)
 	e.Start(":3000")
 }

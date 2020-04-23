@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"go_auth/domain"
 	"go_auth/interfaces/model"
 	"go_auth/utils"
@@ -114,16 +113,7 @@ func Login(c echo.Context) error {
 			Message: "パスワードが正しくありません",
 		}
 	}
-	claims := &jwtCustomClaims{
-		u.ID,
-		u.UID,
-		u.Name,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString(signingKey)
+	t, err := CreateToken(u)
 	if err != nil {
 		return err
 	}
@@ -163,8 +153,60 @@ func UpdateUser(c echo.Context) error {
 	}
 	// ユーザー更新処理
 	user.Password = ""
-	fmt.Printf("%v+", user)
 	model.UpdateUser(db, user)
+	return c.JSON(http.StatusOK, user)
+}
+
+// ChangePassword ユーザーのパスワード更新
+func ChangePassword(c echo.Context) error {
+	user := new(domain.User)
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	passwordInfo := new(domain.PasswordInfo)
+	if err = c.Bind(passwordInfo); err != nil {
+		return err
+	}
+	user.ID = uint(id)
+	// validation
+	validateUser := utils.PasswordValidation{Password: passwordInfo.Password}
+	if !utils.PasswordValidate(validateUser) || passwordInfo.Password != passwordInfo.PasswordConfirmation {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid uid",
+		}
+	}
+	// db connect
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー検証
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
+	// パスワード暗号化処理
+	hash, err := bcrypt.GenerateFromPassword([]byte(passwordInfo.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "internal server error",
+		}
+	}
+	user.Password = string(hash)
+	// ユーザー更新処理
+	model.ChangePassword(db, user)
+	user.Password = ""
 	return c.JSON(http.StatusOK, user)
 }
 
@@ -177,4 +219,19 @@ func UserIDFromToken(c echo.Context) error {
 	name := claims.Name
 	user := domain.UserForGeneral{ID: id, UID: uid, Name: name}
 	return c.JSON(http.StatusOK, user)
+}
+
+// CreateToken jwt tokenを作成する処理
+func CreateToken(u *domain.User) (string, error) {
+	claims := &jwtCustomClaims{
+		u.ID,
+		u.UID,
+		u.Name,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString(signingKey)
+	return t, err
 }
