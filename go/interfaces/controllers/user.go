@@ -114,16 +114,7 @@ func Login(c echo.Context) error {
 			Message: "パスワードが正しくありません",
 		}
 	}
-	claims := &jwtCustomClaims{
-		u.ID,
-		u.UID,
-		u.Name,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString(signingKey)
+	t, err := CreateToken(u)
 	if err != nil {
 		return err
 	}
@@ -177,4 +168,19 @@ func UserIDFromToken(c echo.Context) error {
 	name := claims.Name
 	user := domain.UserForGeneral{ID: id, UID: uid, Name: name}
 	return c.JSON(http.StatusOK, user)
+}
+
+// CreateToken jwt tokenを作成する処理
+func CreateToken(u *domain.User) (string, error) {
+	claims := &jwtCustomClaims{
+		u.ID,
+		u.UID,
+		u.Name,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString(signingKey)
+	return t, err
 }

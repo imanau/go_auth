@@ -127,6 +127,33 @@ func TestUpdateOK(t *testing.T) {
 	}
 }
 
+// changePassswordの正常系
+func TestchangePasswordOK(t *testing.T) {
+	// param
+	okJSON := `{"new_password":"password2", "password": "password","password_confirmation":"password"}`
+	// テストデータ用意　＆　後始末
+	user := new(domain.User)
+	json.Unmarshal([]byte(okJSON), &user)
+	user.UID = "test@example.com"
+	user.Name = "test"
+	user.Password = "password"
+	user.Role = 1
+	db, err := model.ConnectDB()
+	if err != nil {
+		t.Error("db connect error")
+	}
+	defer db.Close()
+	defer phisDelete(db, user)
+	model.CreateUser(db, user)
+	// token＆headerセット
+	url := "/admin/users/change_password" + strconv.Itoa(int(user.ID))
+	c, rec := jwtAuth(url, okJSON, "PATCH")
+	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
+	if assert.NoError(t, exec) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
 // テスト用レコード物理削除関数
 func phisDelete(db *gorm.DB, user *domain.User) {
 	if user.ID == 0 {
@@ -137,7 +164,11 @@ func phisDelete(db *gorm.DB, user *domain.User) {
 
 // jwt認証共通部分
 func jwtAuth(path string, param string, method string) (echo.Context, *httptest.ResponseRecorder) {
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTEsInVpZCI6InRlc3RAZXhhbXBsZS5jb20iLCJuYW1lIjoidGVzdCIsImV4cCI6MTU4NzY0MTYzMX0.AlVrjvtbsZ3xaqF_IEUWjJ1ECQ89N-OLSJVWqq7XK-Q"
+	user := domain.User{UID: "test@example.com", Name: "test", ID: uint(1)}
+	token, err := CreateToken(&user)
+	if err != nil {
+		fmt.Print("jwt error")
+	}
 	e := echo.New()
 	var req *http.Request
 	switch method {
