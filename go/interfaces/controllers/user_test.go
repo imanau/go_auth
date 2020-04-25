@@ -178,6 +178,30 @@ func TestInitPasswordOK(t *testing.T) {
 	}
 }
 
+// DeleteUserの正常系
+func TestDeleteUser(t *testing.T) {
+	// テストデータ用意　＆　後始末
+	user := new(domain.User)
+	user.UID = "test@example.com"
+	user.Name = "test"
+	user.Password = "password"
+	user.Role = 1
+	db, err := model.ConnectDB()
+	if err != nil {
+		t.Error("db connect error")
+	}
+	defer db.Close()
+	defer phisDelete(db, user)
+	model.CreateUser(db, user)
+	// token＆headerセット
+	url := "/admin/users/" + strconv.Itoa(int(user.ID))
+	c, rec := jwtAuth(url, "", "DELETE")
+	exec := middleware.JWTWithConfig(Config)(UserIDFromToken)(c)
+	if assert.NoError(t, exec) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+	}
+}
+
 // テスト用レコード物理削除関数
 func phisDelete(db *gorm.DB, user *domain.User) {
 	if user.ID == 0 {
@@ -202,6 +226,8 @@ func jwtAuth(path string, param string, method string) (echo.Context, *httptest.
 		req = httptest.NewRequest(echo.POST, path, strings.NewReader(param))
 	case "PATCH":
 		req = httptest.NewRequest(echo.PATCH, path, strings.NewReader(param))
+	case "DELETE":
+		req = httptest.NewRequest(echo.DELETE, path, strings.NewReader(param))
 	}
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
