@@ -210,6 +210,46 @@ func ChangePassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// InitPassword ユーザーのパスワード初期化
+func InitPassword(c echo.Context) error {
+	user := new(domain.User)
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	// db connect
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー検証
+	user.ID = uint(id)
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
+	// パスワード暗号化処理
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.UID), bcrypt.DefaultCost)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusInternalServerError,
+			Message: "internal server error",
+		}
+	}
+	user.Password = string(hash)
+	model.ChangePassword(db, user)
+	user.Password = ""
+	return c.JSON(http.StatusOK, user)
+}
+
 // UserIDFromToken jwt tokenでユーザーを認証し、そのユーザー情報を返却する
 func UserIDFromToken(c echo.Context) error {
 	u := c.Get("user").(*jwt.Token)
