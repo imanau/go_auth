@@ -23,6 +23,7 @@ func Init() {
 	api.GET("/users", controllers.Index)
 	api.POST("/users", controllers.Signup)
 	api.PATCH("/users/:id", controllers.UpdateUser)
+	api.DELETE("/users/:id", controllers.DestroyUser)
 	api.PATCH("/users/change_password/:id", controllers.ChangePassword)
 	api.PATCH("/users/init_account/:id", controllers.InitPassword)
 	api.GET("/me", controllers.UserIDFromToken)

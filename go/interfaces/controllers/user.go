@@ -250,6 +250,37 @@ func InitPassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// DestroyUser ユーザーの削除処理
+func DestroyUser(c echo.Context) error {
+	user := new(domain.User)
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	// db connect
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー検証
+	user.ID = uint(id)
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
+	model.DeleteUser(db, user)
+	user.Password = ""
+	return c.JSON(http.StatusOK, user)
+}
+
 // UserIDFromToken jwt tokenでユーザーを認証し、そのユーザー情報を返却する
 func UserIDFromToken(c echo.Context) error {
 	u := c.Get("user").(*jwt.Token)

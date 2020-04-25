@@ -65,3 +65,8 @@ func UpdateUser(db *gorm.DB, user *domain.User) {
 func ChangePassword(db *gorm.DB, user *domain.User) {
 	db.Model(&user).Update("password", user.Password)
 }
+
+// DeleteUser ユーザーを論理削除
+func DeleteUser(db *gorm.DB, user *domain.User) {
+	db.Delete(user)
+}
