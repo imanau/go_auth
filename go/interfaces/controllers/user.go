@@ -16,7 +16,6 @@ import (
 
 type jwtCustomClaims struct {
 	ID   uint   `json:"id"`
-	UID  string `json:"uid"`
 	Name string `json:"name"`
 	jwt.StandardClaims
 }
@@ -286,9 +285,8 @@ func UserIDFromToken(c echo.Context) error {
 	u := c.Get("user").(*jwt.Token)
 	claims := u.Claims.(*jwtCustomClaims)
 	id := claims.ID
-	uid := claims.UID
 	name := claims.Name
-	user := domain.UserForGeneral{ID: id, UID: uid, Name: name}
+	user := domain.UserForGeneral{ID: id, Name: name}
 	return c.JSON(http.StatusOK, user)
 }
 
@@ -296,7 +294,6 @@ func UserIDFromToken(c echo.Context) error {
 func CreateToken(u *domain.User) (string, error) {
 	claims := &jwtCustomClaims{
 		u.ID,
-		u.UID,
 		u.Name,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
