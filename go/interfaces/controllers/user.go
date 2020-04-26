@@ -179,6 +179,13 @@ func UpdateUser(c echo.Context) error {
 	if err != nil {
 		SQLError(c, err)
 	}
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
 	// ユーザー更新処理
 	user.Password = ""
 	model.UpdateUser(db, user)

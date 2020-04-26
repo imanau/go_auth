@@ -17,6 +17,7 @@ func Init() {
 
 	e.POST("/sign_up", controllers.Signup)
 	e.POST("/login", controllers.Login)
+	// admin => admin権限用のアクション
 	admin := e.Group("/admin")
 	admin.Use(middleware.JWTWithConfig(controllers.Config))
 	admin.Use(controllers.AdminAuthMiddleware)
@@ -28,9 +29,13 @@ func Init() {
 	admin.PATCH("/users/change_password/:id", controllers.ChangePassword)
 	admin.PATCH("/users/init_account/:id", controllers.InitPassword)
 	admin.GET("/me", controllers.UserIDFromToken)
+	// api => ユーザー権限用のアクション
 	api := e.Group("/api")
 	api.Use(middleware.JWTWithConfig(controllers.Config))
 	api.Use(controllers.UserAuthMiddleware)
 	api.GET("/users/:id", controllers.Show)
+	api.PATCH("/users/:id", controllers.UpdateUser)
+	api.DELETE("/users/:id", controllers.DestroyUser)
+	api.PATCH("/users/change_password/:id", controllers.ChangePassword)
 	e.Start(":3000")
 }
