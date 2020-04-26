@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"golang.org/x/crypto/bcrypt"
@@ -124,28 +125,12 @@ func Index(c echo.Context) error {
 // Show showActionHandler
 func Show(c echo.Context) error {
 	user := new(domain.User)
-	strid := c.Param("id")
-	id, err := strconv.Atoi(strid)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id",
-		}
-	}
-	user.ID = uint(id)
 	db, err := model.ConnectDB()
 	defer db.Close()
 	if err != nil {
 		SQLError(c, err)
 	}
-	// ユーザー検証
-	model.FindUser(db, user)
-	if user.ID == 0 {
-		return &echo.HTTPError{
-			Code:    http.StatusConflict,
-			Message: "ユーザー情報が正しくありません",
-		}
-	}
+	SetUser(user, db, c)
 	user.Password = ""
 	return c.JSON(http.StatusOK, user)
 }
@@ -153,37 +138,21 @@ func Show(c echo.Context) error {
 // UpdateUser パスワード以外のユーザー情報の更新
 func UpdateUser(c echo.Context) error {
 	user := new(domain.User)
-	strid := c.Param("id")
-	id, err := strconv.Atoi(strid)
+	db, err := model.ConnectDB()
+	defer db.Close()
 	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id",
-		}
+		SQLError(c, err)
 	}
+	SetUser(user, db, c)
 	if err = c.Bind(user); err != nil {
 		return err
 	}
-	user.ID = uint(id)
 	// validation
 	validateUser := utils.EmailValidation{Email: user.UID}
 	if !utils.EmailValidate(validateUser) {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "invalid uid",
-		}
-	}
-	// db connect
-	db, err := model.ConnectDB()
-	defer db.Close()
-	if err != nil {
-		SQLError(c, err)
-	}
-	model.FindUser(db, user)
-	if user.ID == 0 {
-		return &echo.HTTPError{
-			Code:    http.StatusConflict,
-			Message: "ユーザー情報が正しくありません",
 		}
 	}
 	// ユーザー更新処理
@@ -195,39 +164,22 @@ func UpdateUser(c echo.Context) error {
 // ChangePassword ユーザーのパスワード更新
 func ChangePassword(c echo.Context) error {
 	user := new(domain.User)
-	strid := c.Param("id")
-	id, err := strconv.Atoi(strid)
+	db, err := model.ConnectDB()
+	defer db.Close()
 	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id",
-		}
+		SQLError(c, err)
 	}
+	SetUser(user, db, c)
 	passwordInfo := new(domain.PasswordInfo)
 	if err = c.Bind(passwordInfo); err != nil {
 		return err
 	}
-	user.ID = uint(id)
 	// validation
 	validateUser := utils.PasswordValidation{Password: passwordInfo.Password}
 	if !utils.PasswordValidate(validateUser) || passwordInfo.Password != passwordInfo.PasswordConfirmation {
 		return &echo.HTTPError{
 			Code:    http.StatusBadRequest,
 			Message: "invalid uid",
-		}
-	}
-	// db connect
-	db, err := model.ConnectDB()
-	defer db.Close()
-	if err != nil {
-		SQLError(c, err)
-	}
-	// ユーザー検証
-	model.FindUser(db, user)
-	if user.ID == 0 {
-		return &echo.HTTPError{
-			Code:    http.StatusConflict,
-			Message: "ユーザー情報が正しくありません",
 		}
 	}
 	// パスワード暗号化処理
@@ -248,29 +200,12 @@ func ChangePassword(c echo.Context) error {
 // InitPassword ユーザーのパスワード初期化
 func InitPassword(c echo.Context) error {
 	user := new(domain.User)
-	strid := c.Param("id")
-	id, err := strconv.Atoi(strid)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id",
-		}
-	}
-	// db connect
 	db, err := model.ConnectDB()
 	defer db.Close()
 	if err != nil {
 		SQLError(c, err)
 	}
-	// ユーザー検証
-	user.ID = uint(id)
-	model.FindUser(db, user)
-	if user.ID == 0 {
-		return &echo.HTTPError{
-			Code:    http.StatusConflict,
-			Message: "ユーザー情報が正しくありません",
-		}
-	}
+	SetUser(user, db, c)
 	// パスワード暗号化処理
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.UID), bcrypt.DefaultCost)
 	if err != nil {
@@ -288,29 +223,12 @@ func InitPassword(c echo.Context) error {
 // DestroyUser ユーザーの削除処理
 func DestroyUser(c echo.Context) error {
 	user := new(domain.User)
-	strid := c.Param("id")
-	id, err := strconv.Atoi(strid)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id",
-		}
-	}
-	// db connect
 	db, err := model.ConnectDB()
 	defer db.Close()
 	if err != nil {
 		SQLError(c, err)
 	}
-	// ユーザー検証
-	user.ID = uint(id)
-	model.FindUser(db, user)
-	if user.ID == 0 {
-		return &echo.HTTPError{
-			Code:    http.StatusConflict,
-			Message: "ユーザー情報が正しくありません",
-		}
-	}
+	SetUser(user, db, c)
 	model.DeleteUser(db, user)
 	user.Password = ""
 	return c.JSON(http.StatusOK, user)
@@ -392,4 +310,29 @@ func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		return next(c)
 	}
+}
+
+// SetUser ユーザー情報をセットする
+func SetUser(user *domain.User, db *gorm.DB, c echo.Context) error {
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	user.ID = uint(id)
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー検証
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
+	return err
 }
