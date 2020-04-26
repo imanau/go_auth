@@ -17,4 +17,4 @@
 /db_test/*
 
 # envfile
-*.env
+*production.env
