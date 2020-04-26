@@ -3,6 +3,11 @@ VERSION=1.0
 
 MAKEFILE_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
+up:
+	docker-compose up -d db db_test &&   \
+	sleep 3 && \
+	docker-compose up go
+
 build:
 	docker build -t $(NAME) .
 
