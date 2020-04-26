@@ -28,20 +28,6 @@ var Config = middleware.JWTConfig{
 	SigningKey: signingKey,
 }
 
-// Index indexActionHandler
-func Index(c echo.Context) error {
-	db, err := model.ConnectDB()
-	defer db.Close()
-	if err != nil {
-		SQLError(c, err)
-	}
-	rows := model.AllUser(db)
-	if rows.Error != nil {
-		SQLError(c, rows.Error)
-	}
-	return c.JSON(http.StatusOK, rows.Value)
-}
-
 // Signup Handler
 func Signup(c echo.Context) error {
 	user := new(domain.User)
@@ -119,6 +105,49 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})
+}
+
+// Index indexActionHandler
+func Index(c echo.Context) error {
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	rows := model.AllUser(db)
+	if rows.Error != nil {
+		SQLError(c, rows.Error)
+	}
+	return c.JSON(http.StatusOK, rows.Value)
+}
+
+// Show showActionHandler
+func Show(c echo.Context) error {
+	user := new(domain.User)
+	strid := c.Param("id")
+	id, err := strconv.Atoi(strid)
+	if err != nil {
+		return &echo.HTTPError{
+			Code:    http.StatusBadRequest,
+			Message: "invalid id",
+		}
+	}
+	user.ID = uint(id)
+	db, err := model.ConnectDB()
+	defer db.Close()
+	if err != nil {
+		SQLError(c, err)
+	}
+	// ユーザー検証
+	model.FindUser(db, user)
+	if user.ID == 0 {
+		return &echo.HTTPError{
+			Code:    http.StatusConflict,
+			Message: "ユーザー情報が正しくありません",
+		}
+	}
+	user.Password = ""
+	return c.JSON(http.StatusOK, user)
 }
 
 // UpdateUser パスワード以外のユーザー情報の更新
@@ -322,6 +351,33 @@ func AdminAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// ユーザー検証
 		model.FindUser(db, user)
 		if user.ID == 0 || user.Role != 1 {
+			return &echo.HTTPError{
+				Code:    http.StatusUnauthorized,
+				Message: "アクセス権限がありません",
+			}
+		}
+		return next(c)
+	}
+}
+
+// UserAuthMiddleware jwt認証後の一般ユーザー用middleware
+func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user := new(domain.User)
+		// jwt tokenからユーザーidを取得
+		u := c.Get("user").(*jwt.Token)
+		claims := u.Claims.(*jwtCustomClaims)
+		user.ID = claims.ID
+		// request bodyからidを取得
+		paramID := c.Param("id")
+		id, err := strconv.Atoi(paramID)
+		if err != nil {
+			return &echo.HTTPError{
+				Code:    http.StatusBadRequest,
+				Message: "invalid id",
+			}
+		}
+		if user.ID != uint(id) {
 			return &echo.HTTPError{
 				Code:    http.StatusUnauthorized,
 				Message: "アクセス権限がありません",
