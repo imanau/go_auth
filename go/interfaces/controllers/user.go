@@ -303,3 +303,30 @@ func CreateToken(u *domain.User) (string, error) {
 	t, err := token.SignedString(signingKey)
 	return t, err
 }
+
+// AdminAuthMiddleware admin権限があるか判断するカスタムミドルウェア
+func AdminAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user := new(domain.User)
+		// jwt tokenからユーザーidを取得
+		u := c.Get("user").(*jwt.Token)
+		claims := u.Claims.(*jwtCustomClaims)
+		id := claims.ID
+		user.ID = id
+		// db connect
+		db, err := model.ConnectDB()
+		defer db.Close()
+		if err != nil {
+			SQLError(c, err)
+		}
+		// ユーザー検証
+		model.FindUser(db, user)
+		if user.ID == 0 || user.Role != 1 {
+			return &echo.HTTPError{
+				Code:    http.StatusUnauthorized,
+				Message: "アクセス権限がありません",
+			}
+		}
+		return next(c)
+	}
+}
