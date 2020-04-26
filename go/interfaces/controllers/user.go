@@ -281,6 +281,7 @@ func AdminAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				Message: "アクセス権限がありません",
 			}
 		}
+		c.Set("authorizedUser")
 		return next(c)
 	}
 }
@@ -308,6 +309,7 @@ func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				Message: "アクセス権限がありません",
 			}
 		}
+		c.Set("authorizedUser")
 		return next(c)
 	}
 }
