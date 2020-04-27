@@ -1,0 +1,19 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker set up
+        run: |
+          make up
+      - name: Execute tests 
+        run: |
+          make test
+     
