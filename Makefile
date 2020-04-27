@@ -23,4 +23,4 @@ run:
 	docker run -it -v $(MAKEFILE_DIR):/usr/src/go_auth -p 3000:3000  $(NAME) bash -c 'go run main.go'
 
 test:
-	docker-compose exec go /bin/bash -c 'GO_ENV=test go test -v ./...'
+	docker-compose exec -T go /bin/bash -c 'GO_ENV=test go test -v ./...'
