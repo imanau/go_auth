@@ -8,6 +8,11 @@ up:
 	sleep 3 && \
 	docker-compose up go
 
+ci:
+	docker-compose up -d db db_test &&   \
+	sleep 3 && \
+	docker-compose up -d go 
+
 build:
 	docker build -t $(NAME) .
 
