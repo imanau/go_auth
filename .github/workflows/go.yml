@@ -6,10 +6,21 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  PJ_ACTOR: imanau
+  PJ_REPO: go_auth
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Clone ${{ env.PJ_REPO }}
+        uses: actions/checkout@v1
+        with:
+          repository: ${{ env.PJ_ACTOR }}/${{ env.PJ_DOCKER_REPO }}
+          ref: refs/heads/master
+          token: ${{ env.GITHUB_PAT }}
       - name: Docker set up
         run: |
           make up
