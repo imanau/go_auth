@@ -22,7 +22,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker set up
         run: |
-          make up_for_cli
+          make up_for_ci
       - name: Execute tests 
         run: |
           make test
