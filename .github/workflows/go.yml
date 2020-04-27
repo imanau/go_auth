@@ -9,7 +9,6 @@ on:
 env:
   PJ_ACTOR: imanau
   PJ_REPO: go_auth
-  GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
 
 jobs:
   test:
@@ -20,7 +19,7 @@ jobs:
         with:
           repository: ${{ env.PJ_ACTOR }}/${{ env.PJ_DOCKER_REPO }}
           ref: refs/heads/master
-          token: ${{ env.GITHUB_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker set up
         run: |
           make up
