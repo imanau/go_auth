@@ -17,7 +17,7 @@ jobs:
       - name: Clone ${{ env.PJ_REPO }}
         uses: actions/checkout@v1
         with:
-          repository: ${{ env.PJ_ACTOR }}/${{ env.PJ_DOCKER_REPO }}
+          repository: ${{ env.PJ_ACTOR }}/${{ env.PJ_REPO }}
           ref: refs/heads/master
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker set up
