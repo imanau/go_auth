@@ -11,7 +11,7 @@ up:
 ci:
 	docker-compose up -d db db_test &&   \
 	sleep 3 && \
-	docker-compose up go -d
+	docker-compose up -d go 
 
 build:
 	docker build -t $(NAME) .
