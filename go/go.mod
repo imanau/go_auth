@@ -13,5 +13,6 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
+	golang.org/x/tools v0.0.0-20200428021058-7ae4988eb4d9 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
