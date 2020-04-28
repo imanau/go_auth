@@ -24,3 +24,6 @@ run:
 
 test:
 	docker-compose exec -T go /bin/bash -c 'GO_ENV=test go test -v ./...'
+
+document:
+	docker-compose exec go /bin/bash -c 'go get golang.org/x/tools/cmd/godoc && /go/bin/godoc -http=:8080'
