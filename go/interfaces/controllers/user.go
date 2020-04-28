@@ -1,3 +1,6 @@
+// Package controllers パッケージはMVCモデルのコントローラーにあたります
+//
+// ルーティングに紐付けられたアクションを実行します。
 package controllers
 
 import (
@@ -15,21 +18,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// jwt認証用の型です。jwt認証のclaimに保持する値を要素に持ちます。
 type jwtCustomClaims struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
 	jwt.StandardClaims
 }
 
+// jwt認証に利用する文字列です。（注：今回はサンプル文字列を利用しています。）
 var signingKey = []byte("secretkeysample")
 
-// Config jwtconfig
+// Config jwt認証用の変数です。
 var Config = middleware.JWTConfig{
 	Claims:     &jwtCustomClaims{},
 	SigningKey: signingKey,
 }
 
-// Signup Handler
+// Signup ユーザー作成用のハンドラです。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し新規ユーザーを作成します。
+// return json (new domain.User)
 func Signup(c echo.Context) error {
 	user := new(domain.User)
 	if err := c.Bind(user); err != nil {
@@ -71,7 +78,9 @@ func Signup(c echo.Context) error {
 	return c.JSON(http.StatusCreated, user)
 }
 
-// Login Handler return jwt
+// Login jwt認証を用いないユーザーの認証を行います。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザーを検索します。
+// return json (domain.User)
 func Login(c echo.Context) error {
 	u := new(domain.User)
 	if err := c.Bind(u); err != nil {
@@ -108,7 +117,9 @@ func Login(c echo.Context) error {
 	})
 }
 
-// Index indexActionHandler
+// Index ユーザーの一覧情報をjsonで返却します。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザーズを検索します。
+// return json (array[domain.User])
 func Index(c echo.Context) error {
 	db, err := model.ConnectDB()
 	defer db.Close()
@@ -122,7 +133,9 @@ func Index(c echo.Context) error {
 	return c.JSON(http.StatusOK, rows.Value)
 }
 
-// Show showActionHandler
+// Show ユーザー情報をjsonで返却します。
+// urlパラメーターのid情報に合致するユーザー情報を返却します。
+// return json (domain.User)
 func Show(c echo.Context) error {
 	user := new(domain.User)
 	db, err := model.ConnectDB()
@@ -135,7 +148,9 @@ func Show(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// UpdateUser パスワード以外のユーザー情報の更新
+// UpdateUser ユーザー情報を更新し、jsonで更新後ユーザー情報を返却します。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザー情報を更新します。
+// return json (domain.User)
 func UpdateUser(c echo.Context) error {
 	user := new(domain.User)
 	db, err := model.ConnectDB()
@@ -161,7 +176,9 @@ func UpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// ChangePassword ユーザーのパスワード更新
+// ChangePassword ユーザーのパスワードを変更します。
+// domain.PasswordInfo型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザー情報を更新します。
+// return json (domain.User)
 func ChangePassword(c echo.Context) error {
 	user := new(domain.User)
 	db, err := model.ConnectDB()
@@ -197,7 +214,9 @@ func ChangePassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// InitPassword ユーザーのパスワード初期化
+// InitPassword ユーザーのパスワードを初期化します。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザー情報を更新します。
+// return json (domain.User)
 func InitPassword(c echo.Context) error {
 	user := new(domain.User)
 	db, err := model.ConnectDB()
@@ -220,7 +239,10 @@ func InitPassword(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// DestroyUser ユーザーの削除処理
+// DestroyUser ユーザー情報を論理削除します。
+// domain.User型に準拠したjsonパラメーターを送信することでdbと連動し既存ユーザー情報のdeleted_atを更新します。
+// deleted_atが空ではないユーザーは、IndexやShowアクションで返却されません。
+// return json (domain.User)
 func DestroyUser(c echo.Context) error {
 	user := new(domain.User)
 	db, err := model.ConnectDB()
@@ -234,7 +256,9 @@ func DestroyUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// UserIDFromToken jwt tokenでユーザーを認証し、そのユーザー情報を返却する
+// UserIDFromToken jwt tokenから得たユーザー情報をjsonで返却します。
+// request headerに付与されたtoken情報からユーザー情報を抽出し、domain.User型のjsonを返却します。
+// return json (domain.User)
 func UserIDFromToken(c echo.Context) error {
 	u := c.Get("user").(*jwt.Token)
 	claims := u.Claims.(*jwtCustomClaims)
@@ -244,7 +268,9 @@ func UserIDFromToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-// CreateToken jwt tokenを作成する処理
+// CreateToken *domain.User型を渡すことで、その情報からjwt tokenを生成します。
+// ハンドラではなく、token情報の文字列及びerror情報を呼び出し元に返却します。
+// return string t, err errror
 func CreateToken(u *domain.User) (string, error) {
 	claims := &jwtCustomClaims{
 		u.ID,
@@ -258,7 +284,9 @@ func CreateToken(u *domain.User) (string, error) {
 	return t, err
 }
 
-// AdminAuthMiddleware admin権限があるか判断するカスタムミドルウェア
+// AdminAuthMiddleware 管理者権限用認可middle ware
+// admin/以下のurlのアクションの前に呼び出され、token情報からユーザーの権限をチェックします。
+// return echo.Context（各ハンドラーに引き渡す）
 func AdminAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		user := new(domain.User)
@@ -286,7 +314,10 @@ func AdminAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// UserAuthMiddleware jwt認証後の一般ユーザー用middleware
+// UserAuthMiddleware 一般ユーザー権限用認可middle ware
+// api/以下のurlのアクションの前に呼び出され、token情報からユーザーの権限をチェックします。
+// 一般ユーザーは自身以外のユーザー情報にアクセスできないように制御します。
+// return echo.Context（各ハンドラーに引き渡す）
 func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		user := new(domain.User)
@@ -314,7 +345,9 @@ func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// SetUser ユーザー情報をセットする
+// SetUser Show, Updateアクションの前に操作対象のユーザー情報を検索し、返却します。
+// urlパラメータに指定するユーザーidからユーザー情報を検索します。
+// return echo.Context（各ハンドラーに引き渡す）
 func SetUser(user *domain.User, db *gorm.DB, c echo.Context) error {
 	strid := c.Param("id")
 	id, err := strconv.Atoi(strid)
